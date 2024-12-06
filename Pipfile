@@ -9,6 +9,10 @@ exotedrf = "*"
 jupyter = "*"
 matplotlib = "*"
 ipdb = "*"
+scikit-learn = "*"
+torch = "*"
+torchvision = "*"
+tqdm = "*"
 
 [dev-packages]
 
