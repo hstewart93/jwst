@@ -2,3 +2,5 @@ crds_cache
 model_background256.npy
 
 /data/
+
+*/__pycache__
