@@ -50,7 +50,7 @@ def find_order0s(rate_file, aperture='NIS_SUBSTRIP256', plot=True):
     else:
         result = fs.calc_v3pa(V3PA, sources, aperture, data=data, plot=False)
 
-    return result
+    return result, sources
 
 
 def run_simulations(N_simulations=10, output_file='soss_simulations.h5', targ_Teff=6000, targ_Jmag=9, N_contaminants=5,
