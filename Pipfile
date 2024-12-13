@@ -13,6 +13,11 @@ scikit-learn = "*"
 torch = "*"
 torchvision = "*"
 tqdm = "*"
+bokeh = "*"
+h5py = "*"
+exoctk = "*"
+pip = "*"
+"pandeia.engine" = "*"
 
 [dev-packages]
 

@@ -23,6 +23,59 @@ from bokeh.models import LogColorMapper, LinearColorMapper
 from exoctk.contam_visibility import field_simulator as fs
 
 
+def run_simulations_random(
+        N_simulations=10,
+        output_file='soss_simulations.h5',
+        targ_Teff_range=(2500, 7000, 250),
+        targ_Jmag_range=(7, 15),
+        N_contaminants=5,
+        Jmag_range=(1, 16),
+        aperture='NIS_SUBSTRIP256'
+    ):
+    """
+    Runs multiple simulations in parallel with varying N values and stores results in an HDF5 file.
+
+    To read the data, do:
+    with h5py.File("soss_simulations.h5", "r") as f:
+        contaminants = f["meta_0"][:]
+        simulation_0 = f["data_0"][:]
+    """
+    if isinstance(N_contaminants, int):
+        contaminants = [N_contaminants] * N_simulations
+    elif N_contaminants == 'random':
+        contaminants = np.random.randint(0, 10, N_simulations)
+    elif isinstance(N_contaminants, np.array):
+        contaminants = N_contaminants
+    else:
+        raise ValueError("Please pass an integer, 'random', or an array of len(N_simulations)")
+
+    if isinstance(targ_Teff_range, tuple) and isinstance(targ_Jmag_range, tuple):
+        targ_Teff = np.arange(*targ_Teff_range)
+        targ_Jmag = np.linspace(*targ_Jmag_range)
+    else:
+        raise ValueError("Please pass a tuple of (min, max, step) for targ_Teff_range and a tuple of (min, max) for targ_Jmag_range")
+    
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(
+            simulate_soss,
+            np.random.choice(targ_Teff, N_simulations),
+            np.random.choice(targ_Jmag, N_simulations),
+            contaminants,
+            [Jmag_range] * N_simulations,
+            [aperture] * N_simulations
+        ))
+    
+    # Save results to HDF5
+    with h5py.File(output_file, "w") as f:
+        for i, (data, clist) in enumerate(results):
+            f.create_dataset(f"data_{i}", data=data, compression="gzip")
+            f.create_dataset(f"meta_{i}", data=clist, compression="gzip")
+
+    print("Results saved to", output_file)
+
+    return results
+
+
 def run_simulations(N_simulations=10, output_file='soss_simulations.h5', targ_Teff=6000, targ_Jmag=9, N_contaminants=5,
                     Jmag_range=(1, 16), aperture='NIS_SUBSTRIP256'):
     """
