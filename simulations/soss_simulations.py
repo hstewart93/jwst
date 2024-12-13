@@ -23,6 +23,36 @@ from bokeh.models import LogColorMapper, LinearColorMapper
 from exoctk.contam_visibility import field_simulator as fs
 
 
+def find_order0s(rate_file, aperture='NIS_SUBSTRIP256', plot=True):
+    """
+    Read in a FITS file and identify all the order 0 contaminants in the image
+
+    Parameters
+    ----------
+    rate_file: str
+        The rate file of the observation to load
+    plot: bool
+        Plot the data along with the identified order 0 contaminants
+    """
+    # Get the data
+    data = fits.getdata(rate_file)
+    V3PA = fits.getval(rate_file, 'PWCPOS')
+    ra = fits.getval(rate_file, 'RA')
+    dec = fits.getval(rate_file, 'DEC')
+
+    # Get the field of sources
+    sources = fs.find_sources(ra, dec)
+
+    # Make the V3PA simulation for the given data
+    if plot:
+        result, plt = fs.calc_v3pa(V3PA, sources, aperture, data=data, plot=True)
+        show(plt)
+    else:
+        result = fs.calc_v3pa(V3PA, sources, aperture, data=data, plot=False)
+
+    return result, sources
+
+
 def run_simulations_random(
         N_simulations=10,
         output_file='soss_simulations.h5',
