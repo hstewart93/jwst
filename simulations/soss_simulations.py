@@ -8,6 +8,9 @@ Example Usage:
     scene, sources = ss.simulate_soss()
     ss.run_simulations(100, '100_soss_sims.h5')
 
+    # To randomize the target params do:
+    ss.run_simulations(targ_Jmag=(0, 10), targ_Teff=(2000, 10000), N_contaminants=(0, 10))
+
 Then to read the data of index 0 with the list of its contaminant [y, x, Jmag] values, do:
     import h5py
     with h5py.File("soss_simulations.h5", "r") as f:
@@ -52,6 +55,60 @@ def find_order0s(rate_file, aperture='NIS_SUBSTRIP256', plot=True):
         result = fs.calc_v3pa(V3PA, sources, aperture, data=data, plot=False)
 
     return result, sources
+
+
+def run_simulations_random(
+        N_simulations=10,
+        output_file='soss_simulations.h5',
+        targ_Teff_range=(2500, 7000, 250),
+        targ_Jmag_range=(7, 15),
+        N_contaminants=5,
+        Jmag_range=(1, 16),
+        aperture='NIS_SUBSTRIP256'
+    ):
+    """
+    Runs multiple simulations in parallel with varying N values and stores results in an HDF5 file.
+
+    To read the data, do:
+    with h5py.File("soss_simulations.h5", "r") as f:
+        contaminants = f["meta_0"][:]
+        simulation_0 = f["data_0"][:]
+    """
+    if isinstance(N_contaminants, int):
+        contaminants = [N_contaminants] * N_simulations
+    elif N_contaminants == 'random':
+        contaminants = np.random.randint(0, 10, N_simulations)
+    elif isinstance(N_contaminants, np.array):
+        contaminants = N_contaminants
+    else:
+        raise ValueError("Please pass an integer, 'random', or an array of len(N_simulations)")
+
+    if isinstance(targ_Teff_range, tuple) and isinstance(targ_Jmag_range, tuple):
+        targ_Teff = np.arange(*targ_Teff_range)
+        targ_Jmag = np.linspace(*targ_Jmag_range)
+    else:
+        raise ValueError("Please pass a tuple of (min, max, step) for targ_Teff_range and a tuple of (min, max) for targ_Jmag_range")
+    
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(
+            simulate_soss,
+            np.random.choice(targ_Teff, N_simulations),
+            np.random.choice(targ_Jmag, N_simulations),
+            contaminants,
+            [Jmag_range] * N_simulations,
+            [aperture] * N_simulations
+        ))
+    
+    # Save results to HDF5
+    with h5py.File(output_file, "w") as f:
+        for i, (data, clist, clean) in enumerate(results):
+            f.create_dataset(f"data_{i}", data=data, compression="gzip")
+            f.create_dataset(f"meta_{i}", data=clist, compression="gzip")
+            f.create_dataset(f"clean_{i}", data=clean, compression="gzip")
+
+    print("Results saved to", output_file)
+
+    return results
 
 
 def run_simulations(N_simulations=10, output_file='soss_simulations.h5', targ_Teff=6000, targ_Jmag=9, N_contaminants=5,
@@ -111,9 +168,10 @@ def run_simulations(N_simulations=10, output_file='soss_simulations.h5', targ_Te
 
     # Save results to HDF5
     with h5py.File(output_file, "w") as f:
-        for i, (data, clist) in enumerate(results):
+        for i, (data, clist, clean) in enumerate(results):
             f.create_dataset(f"data_{i}", data=data, compression="gzip")
             f.create_dataset(f"meta_{i}", data=clist, compression="gzip")
+            f.create_dataset(f"clean_{i}", data=clean, compression="gzip")
 
     print("Results saved to", output_file)
 
@@ -180,6 +238,7 @@ def simulate_soss(targ_Teff=6000, targ_Jmag=9, N_contaminants=5, Jmag_range=(1, 
     scene += trace_o2 * targ_Jmag * norm
     scene += trace_o3 * targ_Jmag * norm
 
+    clean_scene = scene.copy()
     # Get the order 0 stamp
     order0 = fs.get_order0(aperture) * 1.5e8 # Scaling factor based on observations
 
@@ -238,4 +297,4 @@ def simulate_soss(targ_Teff=6000, targ_Jmag=9, N_contaminants=5, Jmag_range=(1, 
 
         show(plt)
 
-    return scene, contam_list
+    return scene, contam_list, clean_scene
