@@ -5,6 +5,7 @@ A module to make a bunch of SOSS simulations with randomized order 0 contaminant
 
 Example Usage:
     import soss_simulations as ss
+    scene, sources = ss.simulate_soss()
     ss.run_simulations(100, '100_soss_sims.h5')
 
 Then to read the data of index 0 with the list of its contaminant [y, x, Jmag] values, do:
@@ -63,20 +64,46 @@ def run_simulations(N_simulations=10, output_file='soss_simulations.h5', targ_Te
         contaminants = f["meta_0"][:]
         simulation_0 = f["data_0"][:]
     """
+    # Randomize number of contaminants
     if isinstance(N_contaminants, int):
         contaminants = [N_contaminants] * N_simulations
-    elif N_contaminants == 'random':
-        contaminants = np.random.randint(0, 10, N_simulations)
-    elif isinstance(N_contaminants, np.array):
+    elif isinstance(N_contaminants, (tuple, list)):
+        contaminants = np.random.randint(N_contaminants[0], N_contaminants[1], N_simulations)
+    elif isinstance(N_contaminants, np.ndarray):
         contaminants = N_contaminants
     else:
-        raise ValueError("Please pass an integer, 'random', or an array of len(N_simulations)")
+        raise ValueError("Please pass an integer for uniform, tuple for random sampling, or an array of specific N_contaminants.")
+
+    # Randomize target Teff
+    if isinstance(targ_Teff, (int, float)):
+        teffs = [targ_Teff] * N_simulations
+    elif isinstance(targ_Teff, (tuple, list)):
+        teffs = np.random.randint(targ_Teff[0], targ_Teff[1], N_simulations)
+    elif isinstance(targ_Teff, np.ndarray):
+        teffs = targ_Teff
+    else:
+        raise ValueError("Please pass an integer for uniform, tuple for random sampling, or an array of specific targ_Teff.")
+
+    # Randomize target Jmag
+    if isinstance(targ_Jmag, (int, float)):
+        Jmags = [targ_Jmag] * N_simulations
+    elif isinstance(targ_Jmag, (tuple, list)):
+        Jmags = np.round(np.random.uniform(targ_Jmag[0], targ_Jmag[1], N_simulations), 2)
+    elif isinstance(targ_Jmag, np.ndarray):
+        Jmags = targ_Jmag
+    else:
+        raise ValueError("Please pass an integer for uniform, tuple for random sampling, or an array of specific targ_Jmag.")
+
+    print("Generating SOSS simulations with the following parameters:")
+    print("#    Targ_Teff Targ_Jmag N_contaminants")
+    for i, (n, t, j) in enumerate(zip(contaminants, teffs, Jmags)):
+        print(f"{i:<4} {t:<9} {j:<11} {n:<14}")
 
     with ProcessPoolExecutor() as executor:
         results = list(executor.map(
             simulate_soss,
-            [targ_Teff] * N_simulations,
-            [targ_Jmag] * N_simulations,
+            teffs,
+            Jmags,
             contaminants,
             [Jmag_range] * N_simulations,
             [aperture] * N_simulations
