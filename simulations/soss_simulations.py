@@ -97,9 +97,10 @@ def run_simulations_random(
     
     # Save results to HDF5
     with h5py.File(output_file, "w") as f:
-        for i, (data, clist) in enumerate(results):
+        for i, (data, clist, clean) in enumerate(results):
             f.create_dataset(f"data_{i}", data=data, compression="gzip")
             f.create_dataset(f"meta_{i}", data=clist, compression="gzip")
+            f.create_dataset(f"clean_{i}", data=clean, compression="gzip")
 
     print("Results saved to", output_file)
 
@@ -137,9 +138,10 @@ def run_simulations(N_simulations=10, output_file='soss_simulations.h5', targ_Te
 
     # Save results to HDF5
     with h5py.File(output_file, "w") as f:
-        for i, (data, clist) in enumerate(results):
+        for i, (data, clist, clean) in enumerate(results):
             f.create_dataset(f"data_{i}", data=data, compression="gzip")
             f.create_dataset(f"meta_{i}", data=clist, compression="gzip")
+            f.create_dataset(f"clean_{i}", data=clean, compression="gzip")
 
     print("Results saved to", output_file)
 
@@ -206,6 +208,7 @@ def simulate_soss(targ_Teff=6000, targ_Jmag=9, N_contaminants=5, Jmag_range=(1, 
     scene += trace_o2 * targ_Jmag * norm
     scene += trace_o3 * targ_Jmag * norm
 
+    clean_scene = scene.copy()
     # Get the order 0 stamp
     order0 = fs.get_order0(aperture) * 1.5e8 # Scaling factor based on observations
 
@@ -264,4 +267,4 @@ def simulate_soss(targ_Teff=6000, targ_Jmag=9, N_contaminants=5, Jmag_range=(1, 
 
         show(plt)
 
-    return scene, contam_list
+    return scene, contam_list, clean_scene
