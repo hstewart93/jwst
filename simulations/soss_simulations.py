@@ -250,7 +250,7 @@ def simulate_soss(targ_Teff=6000, targ_Jmag=9, N_contaminants=5, Jmag_range=(1, 
 
         # Randomize the top-left position of the array of ones
         start_row = np.random.randint(-array_rows + 1, target_rows)
-        start_col = np.random.randint(-array_cols + 1, target_cols)
+        start_col = np.random.randint(700, target_cols) # POM starts at col 700
 
         # Randomly choose a multiplication factor from the specified range
         factor = np.random.uniform(*Jmag_range)
