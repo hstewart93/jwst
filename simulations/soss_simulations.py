@@ -20,6 +20,7 @@ Then to read the data of index 0 with the list of its contaminant [y, x, Jmag] v
 """
 from concurrent.futures import ProcessPoolExecutor
 
+from astropy.io import fits
 import numpy as np
 import h5py
 from bokeh.plotting import figure, show
