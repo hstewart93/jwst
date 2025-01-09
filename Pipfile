@@ -18,6 +18,7 @@ h5py = "*"
 exoctk = "*"
 pip = "*"
 "pandeia.engine" = "*"
+imageio = "*"
 
 [dev-packages]
 

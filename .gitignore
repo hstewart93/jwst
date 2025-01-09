@@ -4,3 +4,5 @@ model_background256.npy
 /data/
 */__pycache__/
 .idea
+
+/simulations/gif_images*
