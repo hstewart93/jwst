@@ -19,6 +19,9 @@ exoctk = "*"
 pip = "*"
 "pandeia.engine" = "*"
 imageio = "*"
+tensorflow = {extras = ["and-cuda"], version = "*"}
+keras = "*"
+scikit-image = "*"
 
 [dev-packages]
 
