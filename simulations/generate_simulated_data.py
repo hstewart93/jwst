@@ -4,7 +4,7 @@ import numpy as np
 from simulations.soss_simulations import run_simulations
 
 output_directory = "/data/typhon2/hattie/jwst/soss_simulations"
-number_samples = 2000
+number_samples = 10000
 
 run_simulations(
     N_simulations=number_samples,

@@ -329,10 +329,13 @@ class CustomCallBack(Callback):
 
         ax.set_xlabel("Epochs")
         ax.set_ylabel("Loss")
-        # ax.set_yscale("log")
         ax.legend()
 
         plt.savefig(f"{os.environ['HOME']}/Code/ExoTiC-NEAT-training/unet/training_loss_plot_5x5.png")
+
+        ax.set_yscale("log")
+        plt.savefig(f"{os.environ['HOME']}/Code/ExoTiC-NEAT-training/unet/training_loss_plot_5x5_log.png")
+
         plt.close()
 
 callbacks = [
@@ -367,7 +370,7 @@ ax.plot(best_model_epoch, best_model_val_loss, marker="x", label="best model", c
 
 ax.set_xlabel("Epochs")
 ax.set_ylabel("Loss")
-# ax.set_yscale("log")
+ax.set_yscale("log")
 ax.legend()
 
 plt.savefig("unet/loss_plot_5x5.png")
